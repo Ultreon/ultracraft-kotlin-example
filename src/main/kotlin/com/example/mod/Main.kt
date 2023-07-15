@@ -16,5 +16,4 @@ object Main : ModInitializer {
         ModBlocks.register()
         BlockModelRegistry.registerDefault(ModBlocks.example)
     }
-
 }
