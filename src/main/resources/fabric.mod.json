@@ -4,7 +4,7 @@
   "name": "Example Mod",
   "version": "1.0.0",
   "environment": "*",
-  "description": "The Fabric example mod for Ultreon Craft",
+  "description": "The Fabric example mod for Ultreon Craft in Kotlin",
   "license": "All-Rights-Reserved",
   "icon": "assets/examplemod/icon.png",
   "authors": [
@@ -15,7 +15,10 @@
   ],
   "entrypoints": {
     "main": [
-      "com.example.mod.Main"
+      {
+        "adapter": "kotlin",
+        "value": "com.example.mod.Main"
+      }
     ]
   },
   "depends": {
