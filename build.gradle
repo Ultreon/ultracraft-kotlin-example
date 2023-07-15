@@ -1,0 +1,98 @@
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.21'
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.7"
+}
+
+group = 'com.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io/" }
+    maven { url "https://maven.fabricmc.net/" }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    implementation "com.github.Ultreon.ultreon-craft:core:$ultreon_craft_version"
+    implementation "com.github.Ultreon.ultreon-craft:desktop:$ultreon_craft_version"
+    implementation "com.github.Ultreon.ultreon-craft:desktop:$ultreon_craft_version"
+    implementation "com.github.Ultreon.ultreon-craft:gameprovider:$ultreon_craft_version"
+
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx-platform:1.11.0:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:1.11.0:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-bullet-platform:1.11.0:natives-desktop"
+    implementation "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:2.2.1"
+    implementation "com.badlogicgames.gdx:gdx-freetype-platform:1.11.0:natives-desktop"
+    implementation "net.fabricmc:fabric-language-kotlin:1.10.0+kotlin.1.9.0"
+
+    implementation("net.fabricmc:sponge-mixin:0.12.4+mixin.0.8.5") {
+        exclude module: 'launchwrapper'
+        exclude module: 'guava'
+    }
+
+    implementation 'net.fabricmc:tiny-mappings-parser:0.3.0+build.17'
+    implementation 'net.fabricmc:tiny-remapper:0.8.5'
+    implementation 'net.fabricmc:dev-launch-injector:0.2.1+build.8'
+    implementation 'net.fabricmc:access-widener:2.1.0'
+
+    implementation("net.fabricmc:fabric-loader:0.14.21")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+mkdir("$projectDir/run/")
+mkdir("$buildDir/ultreon-craft")
+
+def ps = System.getProperty("path.separator")
+def files = configurations.runtimeClasspath
+def strm = (files.toList()).stream()
+def rcl = String.join(ps, strm.map {
+    it.path
+}.filter{it != null }.toList())
+//\tfabric.remapClasspathFile=$buildDir/bubbles/classpath.txt
+//\tfabric.classPathGroups=$buildDir/classes/java/main/$ps$buildDir/resources/main/$ps${project(":core").buildDir}/classes/java/main/$ps${project(":core").buildDir}/resources/main/$ps${project(":desktop").buildDir}/classes/java/main/$ps${project(":desktop").buildDir}/resources/main/$ps${project(":gameprovider").buildDir}/classes/java/main/$ps${project(":gameprovider").buildDir}/resources/main/$ps$rcl
+def conf = """
+commonProperties
+\tfabric.development=true
+\tlog4j2.formatMsgNoLookups=true
+\tfabric.log.disableAnsi=false
+\tlog4j.configurationFile=$rootProject.projectDir/log4j.xml
+"""
+
+def launchFile = file("$buildDir/ultreon-craft/launch.cfg")
+Files.writeString(launchFile.toPath(), conf, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+
+def cp = "$rcl"
+
+def cpFile = file("$buildDir.absolutePath/ultreon-craft/classpath.txt")
+Files.writeString(cpFile.toPath(), cp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+
+idea{
+    project{
+        settings {
+            withIDEADir { File dir ->
+                println("Callback 1 executed with: " + dir.absolutePath)
+            }
+
+            runConfigurations {
+                "Ultreon Craft"(org.jetbrains.gradle.ext.Application) {                       // Create new run configuration "MyApp" that will run class foo.App
+                    jvmArgs = "-Xmx2g -Dfabric.dli.config=$launchFile.path -Dfabric.dli.env=CLIENT -Dfabric.dli.main=net.fabricmc.loader.impl.launch.knot.KnotClient"
+                    mainClass = 'net.fabricmc.devlaunchinjector.Main'
+                    moduleName = idea.module.name + ".main"
+                    workingDirectory = "$rootProject.projectDir/run/"
+                    programParameters = "--gameDir=."
+                }
+            }
+        }
+    }
+}

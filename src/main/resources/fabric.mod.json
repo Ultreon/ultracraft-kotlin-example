@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "examplemod",
+  "name": "Example Mod",
+  "version": "1.0.0",
+  "environment": "*",
+  "description": "The Fabric example mod for Ultreon Craft",
+  "license": "All-Rights-Reserved",
+  "icon": "assets/examplemod/icon.png",
+  "authors": [
+    "FabricMC"
+  ],
+  "mixins": [
+    "examplemod.mixins.json"
+  ],
+  "entrypoints": {
+    "main": [
+      "com.example.mod.Main"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "craft": "0.1.0"
+  },
+  "breaks": {
+    "minecraft": "*"
+  }
+}
